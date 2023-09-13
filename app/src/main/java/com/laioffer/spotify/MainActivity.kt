@@ -70,9 +70,10 @@ class MainActivity : AppCompatActivity() {
 
         // Coroutine
         GlobalScope.launch(Dispatchers.IO) {
-            val call: Call<List<Section>> = api.getHomeFeed()
-            val feed = call.execute().body()
-            Log.d("Network", feed.toString())
+            // comment out
+            // val api = NetworkModule.provideRetrofit().create(NetworkApi::class.java)
+            val response = api.getHomeFeed().execute().body()
+            Log.d("Network", response.toString())
         }
     }
 }

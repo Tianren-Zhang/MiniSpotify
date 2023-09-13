@@ -1,6 +1,7 @@
 package com.laioffer.spotify
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,10 +24,27 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import coil.compose.AsyncImage
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.laioffer.spotify.datamodel.Section
+//import com.laioffer.spotify.network.Car
+import com.laioffer.spotify.network.NetworkApi
+import com.laioffer.spotify.network.NetworkModule
 import com.laioffer.spotify.ui.theme.SpotifyTheme
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Retrofit
+import javax.inject.Inject
 
 // customized extend AppCompatActivity
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    // field injection
+    @Inject
+    lateinit var api: NetworkApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -37,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         // get navController
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        val navController = navHostFragment.navController // get
 
         navController.setGraph(R.navigation.nav_graph)
 
@@ -49,6 +67,13 @@ class MainActivity : AppCompatActivity() {
 //            navController.popBackStack(it.itemId, inclusive = false)
 //            true
 //        }
+
+        // Coroutine
+        GlobalScope.launch(Dispatchers.IO) {
+            val call: Call<List<Section>> = api.getHomeFeed()
+            val feed = call.execute().body()
+            Log.d("Network", feed.toString())
+        }
     }
 }
 

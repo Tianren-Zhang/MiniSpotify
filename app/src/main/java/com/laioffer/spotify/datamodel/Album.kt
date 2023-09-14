@@ -1,9 +1,13 @@
 package com.laioffer.spotify.datamodel
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
+@Entity
 data class Album(
+    @PrimaryKey
     val id: Int,
     @SerializedName("album")
     val name: String,
@@ -12,8 +16,6 @@ data class Album(
     val artists: String,
     val description: String
 ): Serializable {
-
-    // static
     companion object {
         fun empty(): Album {
             return Album(
@@ -27,3 +29,4 @@ data class Album(
         }
     }
 }
+

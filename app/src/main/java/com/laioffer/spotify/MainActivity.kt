@@ -3,12 +3,7 @@ package com.laioffer.spotify
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -24,65 +19,68 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import coil.compose.AsyncImage
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.laioffer.spotify.datamodel.Section
-//import com.laioffer.spotify.network.Car
+import com.laioffer.spotify.database.DatabaseDao
+import com.laioffer.spotify.datamodel.Album
 import com.laioffer.spotify.network.NetworkApi
-import com.laioffer.spotify.network.NetworkModule
+import com.laioffer.spotify.repository.HomeRepository
 import com.laioffer.spotify.ui.theme.SpotifyTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Retrofit
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-// customized extend AppCompatActivity
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    // field injection
     @Inject
     lateinit var api: NetworkApi
+    @Inject
+    lateinit var databaseDao: DatabaseDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // find the bottom nav view
+        // findElementById("")
         val navView = findViewById<BottomNavigationView>(R.id.nav_view)
-
-        // get navController
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController // get
-
+        val navController = navHostFragment.navController
         navController.setGraph(R.navigation.nav_graph)
-
         NavigationUI.setupWithNavController(navView, navController)
-
-        // https://stackoverflow.com/questions/70703505/navigationui-not-working-correctly-with-bottom-navigation-view-implementation
-//        navView.setOnItemSelectedListener{
-//            NavigationUI.onNavDestinationSelected(it, navController)
-//            navController.popBackStack(it.itemId, inclusive = false)
-//            true
-//        }
-
-        // Coroutine
+        navView.setOnItemSelectedListener {
+            NavigationUI.onNavDestinationSelected(it, navController)
+            navController.popBackStack(it.itemId, inclusive = false)
+            true
+        }
+        // Test retrofit
         GlobalScope.launch(Dispatchers.IO) {
-            // comment out
-            // val api = NetworkModule.provideRetrofit().create(NetworkApi::class.java)
+            //val api = NetworkModule.provideRetrofit().create(NetworkApi::class.java)
             val response = api.getHomeFeed().execute().body()
             Log.d("Network", response.toString())
         }
+        // remember it runs everytime you start the app
+        GlobalScope.launch {
+            withContext(Dispatchers.IO) {
+                val album = Album(
+                    id = 1,
+                    name =  "Hexagonal",
+                    year = "2008",
+                    cover = "https://upload.wikimedia.org/wikipedia/en/6/6d/Leessang-Hexagonal_%28cover%29.jpg",
+                    artists = "Lesssang",
+                    description = "Leessang (Korean: 리쌍) was a South Korean hip hop duo, composed of Kang Hee-gun (Gary or Garie) and Gil Seong-joon (Gil)"
+                )
+                databaseDao.favoriteAlbum(album)
+            }
+        }
+
     }
 }
 
 @Composable
-fun LoadSection(text: String) {
-    Row(
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
+private fun LoadingSection(text: String) {
+    Row(modifier = Modifier.padding(vertical = 8.dp)) {
         Text(
             text = text,
             style = MaterialTheme.typography.body2,
@@ -93,47 +91,36 @@ fun LoadSection(text: String) {
 
 @Composable
 fun AlbumCover() {
-    Column {
+    Column() {
         Box(modifier = Modifier.size(160.dp)) {
             AsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds,
                 model = "https://upload.wikimedia.org/wikipedia/en/d/d1/Stillfantasy.jpg",
-                contentDescription = null
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillBounds
             )
 
-            Text(
+            Text( // ctrl + J
                 text = "Still Fantasy",
                 color = Color.White,
-                modifier = Modifier.padding(bottom = 4.dp, start = 4.dp).align(Alignment.BottomStart)
+                modifier = Modifier.padding(bottom = 4.dp, start = 2.dp).align(Alignment.BottomStart)
             )
         }
-
         Text(
-            text = "Jay Chou",
-            modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-            style = MaterialTheme.typography.body2.copy(fontWeight = FontWeight.Bold),
-            color = Color.LightGray,
-        )
+            text = "jay Chu",
+            modifier = Modifier.padding(top = 4.dp),
+            style=MaterialTheme.typography.body2.copy(fontWeight = FontWeight.Bold),
+            color = Color.White)
     }
 }
 
-@Preview
-@Composable
-fun PreviewAlbumCover() {
-    SpotifyTheme {
-        Surface {
-            AlbumCover()
-        }
-    }
-}
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Preview LoadingSection")
 @Composable
 fun DefaultPreview() {
     SpotifyTheme {
         Surface {
-            LoadSection("Screen is loading")
+            AlbumCover()
         }
     }
 }
